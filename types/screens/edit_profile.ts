@@ -19,7 +19,7 @@ export interface UserInfo extends Record<string, string | undefined | null| bool
 
 export type CustomAttribute = {
     id: string;
-    name: string; 
+    name: string;
     value: string;
 }
 
