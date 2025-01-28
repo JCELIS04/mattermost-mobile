@@ -1,7 +1,7 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState, useLayoutEffect} from 'react';
 import {useIntl} from 'react-intl';
 import {DeviceEventEmitter, Keyboard, Platform, StyleSheet, View} from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
@@ -59,6 +59,7 @@ const EditProfile = ({
         nickname: currentUser?.nickname || '',
         position: currentUser?.position || '',
         username: currentUser?.username || '',
+        customAttributes: {},
     });
     const [canSave, setCanSave] = useState(false);
     const [error, setError] = useState<unknown>();
@@ -117,6 +118,33 @@ const EditProfile = ({
         setCanSave(value);
     }, [componentId, rightButton]);
 
+    useLayoutEffect(() => {
+        const fetchCustomAttributes = async () => {
+            if (!currentUser) {
+                return;
+            }
+            try {
+                const client = NetworkManager.getClient(serverUrl);
+                const [fields, attrValues] = await Promise.all([
+                    client.getCustomProfileAttributeFields(),
+                    client.getCustomProfileAttributeValues(currentUser.id),
+                ]);
+
+                if (fields?.length > 0) {
+                    const attributes: Record<string, string> = {};
+                    fields.forEach((field) => {
+                        attributes[field.id] = attrValues[field.id] || '';
+                    });
+                    setUserInfo((prev) => ({...prev, customAttributes: attributes}));
+                }
+            } catch {
+                // Ignore errors
+            }
+        };
+
+        fetchCustomAttributes();
+    }, [currentUser, serverUrl]);
+
     const submitUser = useCallback(preventDoubleTap(async () => {
         if (!currentUser) {
             return;
@@ -153,6 +181,12 @@ const EditProfile = ({
                     resetScreenForProfileError(reqError);
                     return;
                 }
+
+                // Update custom attributes if changed
+                if (userInfo.customAttributes) {
+                    const client = NetworkManager.getClient(serverUrl);
+                    await client.updateCustomProfileAttributes(userInfo.customAttributes);
+                }
             }
 
             close();
@@ -172,13 +206,25 @@ const EditProfile = ({
 
     const onUpdateField = useCallback((fieldKey: string, name: string) => {
         const update = {...userInfo};
-        update[fieldKey] = name;
+        if (fieldKey.startsWith('customAttributes.')) {
+            const attrKey = fieldKey.split('.')[1];
+            update.customAttributes = {...update.customAttributes, [attrKey]: name};
+        } else {
+            update[fieldKey] = name;
+        }
         setUserInfo(update);
 
-        // @ts-expect-error access object property by string key
-        const currentValue = currentUser[fieldKey];
-        const didChange = currentValue !== name;
-        hasUpdateUserInfo.current = currentValue !== name;
+        let didChange = false;
+        if (fieldKey.startsWith('customAttributes.')) {
+            const attrKey = fieldKey.split('.')[1];
+            didChange = userInfo.customAttributes?.[attrKey] !== name;
+        } else {
+            // @ts-expect-error access object property by string key
+            const currentValue = currentUser[fieldKey];
+            didChange = currentValue !== name;
+        }
+        
+        hasUpdateUserInfo.current = didChange;
         enableSaveButton(didChange);
     }, [userInfo, currentUser, enableSaveButton]);
 
