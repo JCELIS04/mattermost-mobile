@@ -59,7 +59,7 @@ const EditProfile = ({
         nickname: currentUser?.nickname || '',
         position: currentUser?.position || '',
         username: currentUser?.username || '',
-        customAttributes: {},
+        customAttributes: {} as Record<string, string>,
     });
     const [canSave, setCanSave] = useState(false);
     const [error, setError] = useState<unknown>();

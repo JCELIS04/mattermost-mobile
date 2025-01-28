@@ -7,14 +7,15 @@ import type {FieldProps} from '@screens/edit_profile/components/field';
 import type UserModel from '@typings/database/models/servers/user';
 import type {RefObject} from 'react';
 
-export interface UserInfo extends Record<string, string | undefined | null| boolean> {
+export interface UserInfo {
     email: string;
     firstName: string;
     lastName: string;
     nickname: string;
     position: string;
     username: string;
-    customAttributes?: Record<string, string>;
+    customAttributes: Record<string, string>;
+    [key: string]: string | Record<string, string>;
 }
 
 export type CustomAttribute = {
