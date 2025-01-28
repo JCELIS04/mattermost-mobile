@@ -14,6 +14,13 @@ export interface UserInfo extends Record<string, string | undefined | null| bool
     nickname: string;
     position: string;
     username: string;
+    customAttributes?: Record<string, string>;
+}
+
+export type CustomAttribute = {
+    id: string;
+    name: string; 
+    value: string;
 }
 
 export type EditProfileProps = {

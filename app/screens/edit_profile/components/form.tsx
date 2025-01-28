@@ -1,11 +1,13 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import React, {useCallback, useMemo, useRef} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {type MessageDescriptor, useIntl} from 'react-intl';
 import {Keyboard, StyleSheet, View} from 'react-native';
 
+import {useServerUrl} from '@context/server';
 import {useTheme} from '@context/theme';
+import NetworkManager from '@managers/network_manager';
 import {t} from '@i18n';
 import {getErrorMessage} from '@utils/errors';
 
@@ -29,6 +31,7 @@ type Props = {
     error?: unknown;
     userInfo: UserInfo;
     submitUser: () => void;
+    enableCustomAttributes?: boolean;
 }
 
 const includesSsoService = (sso: string) => ['gitlab', 'google', 'office365'].includes(sso);
@@ -74,7 +77,7 @@ const styles = StyleSheet.create({
 const ProfileForm = ({
     canSave, currentUser, isTablet,
     lockedFirstName, lockedLastName, lockedNickname, lockedPosition,
-    onUpdateField, userInfo, submitUser, error,
+    onUpdateField, userInfo, submitUser, error, enableCustomAttributes,
 }: Props) => {
     const theme = useTheme();
     const intl = useIntl();
@@ -238,6 +241,24 @@ const ProfileForm = ({
                 testID='edit_profile_form.position'
                 value={userInfo.position}
             />
+            {enableCustomAttributes && (
+                <>
+                    <View style={styles.separator}/>
+                    {Object.entries(userInfo.customAttributes || {}).map(([id, value]) => (
+                        <Field
+                            key={id}
+                            fieldKey={`customAttributes.${id}`}
+                            fieldRef={useRef<FloatingTextInputRef>(null)}
+                            label={id}
+                            maxLength={128}
+                            {...fieldConfig}
+                            returnKeyType='done'
+                            testID={`edit_profile_form.custom_attribute.${id}`}
+                            value={value}
+                        />
+                    ))}
+                </>
+            )}
             <View style={styles.footer}/>
         </>
     );
