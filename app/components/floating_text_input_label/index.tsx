@@ -224,7 +224,7 @@ const FloatingTextInput = forwardRef<FloatingTextInputRef, FloatingTextInputProp
         }
 
         return res;
-    }, [styles, theme, shouldShowError, focused, textInputStyle, focusedLabel, multiline, multilineInputHeight, editable]);
+    }, [styles, textInputStyle, multiline, multilineInputHeight]);
 
     const textAnimatedTextStyle = useAnimatedStyle(() => {
         const inputText = placeholder || value || props.defaultValue;

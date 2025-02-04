@@ -1,16 +1,15 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useMemo, useRef} from 'react';
 import {type MessageDescriptor, useIntl} from 'react-intl';
 import {Keyboard, StyleSheet, View} from 'react-native';
 
-import {useServerUrl} from '@context/server';
 import {useTheme} from '@context/theme';
-import NetworkManager from '@managers/network_manager';
 import {t} from '@i18n';
 import {getErrorMessage} from '@utils/errors';
 
+import CustomProfileField from './customProfileField';
 import DisabledFields from './disabled_fields';
 import EmailField from './email_field';
 import Field from './field';
@@ -157,7 +156,7 @@ const ProfileForm = ({
         } else {
             Keyboard.dismiss();
         }
-    }), [canSave, userProfileFields]);
+    }), [canSave, userProfileFields, submitUser]);
 
     const hasDisabledFields = Object.values(userProfileFields).filter((field) => field.isDisabled).length > 0;
 
@@ -244,17 +243,16 @@ const ProfileForm = ({
             {enableCustomAttributes && (
                 <>
                     <View style={styles.separator}/>
-                    {Object.entries(userInfo.customAttributes || {}).map(([id, value]) => (
-                        <Field
+                    {Object.entries(userInfo.customAttributes || {}).map(([id, customAttr]) => (
+                        <CustomProfileField
                             key={id}
                             fieldKey={`customAttributes.${id}`}
-                            fieldRef={useRef<FloatingTextInputRef>(null)}
-                            label={id}
+                            label={customAttr.name}
                             maxLength={128}
                             {...fieldConfig}
                             returnKeyType='done'
                             testID={`edit_profile_form.custom_attribute.${id}`}
-                            value={value}
+                            value={customAttr.value}
                         />
                     ))}
                 </>

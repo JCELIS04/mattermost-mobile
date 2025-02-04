@@ -14,8 +14,7 @@ export interface UserInfo {
     nickname: string;
     position: string;
     username: string;
-    customAttributes: Record<string, string>;
-    [key: string]: string | Record<string, string>;
+    customAttributes: Record<string, CustomAttribute>;
 }
 
 export type CustomAttribute = {
@@ -34,6 +33,7 @@ export type EditProfileProps = {
     lockedNickname: boolean;
     lockedPosition: boolean;
     lockedPicture: boolean;
+    enableCustomAttributes: boolean;
 };
 
 export type NewProfileImage = { localPath?: string; isRemoved?: boolean };

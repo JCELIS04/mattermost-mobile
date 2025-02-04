@@ -16,7 +16,9 @@ import {useServerUrl} from '@context/server';
 import {useTheme} from '@context/theme';
 import useAndroidHardwareBackHandler from '@hooks/android_back_handler';
 import useNavButtonPressed from '@hooks/navigation_button_pressed';
+import NetworkManager from '@managers/network_manager';
 import {dismissModal, popTopScreen, setButtons} from '@screens/navigation';
+import {logDebug} from '@utils/log';
 import {preventDoubleTap} from '@utils/tap';
 
 import ProfileForm from './components/form';
@@ -24,7 +26,7 @@ import ProfileError from './components/profile_error';
 import Updating from './components/updating';
 import UserProfilePicture from './components/user_profile_picture';
 
-import type {EditProfileProps, NewProfileImage, UserInfo} from '@typings/screens/edit_profile';
+import type {EditProfileProps, NewProfileImage, UserInfo, CustomAttribute} from '@typings/screens/edit_profile';
 
 const edges: Edge[] = ['bottom', 'left', 'right'];
 
@@ -44,7 +46,7 @@ const UPDATE_BUTTON_ID = 'update-profile';
 
 const EditProfile = ({
     componentId, currentUser, isModal, isTablet,
-    lockedFirstName, lockedLastName, lockedNickname, lockedPosition, lockedPicture,
+    lockedFirstName, lockedLastName, lockedNickname, lockedPosition, lockedPicture, enableCustomAttributes,
 }: EditProfileProps) => {
     const intl = useIntl();
     const serverUrl = useServerUrl();
@@ -59,7 +61,7 @@ const EditProfile = ({
         nickname: currentUser?.nickname || '',
         position: currentUser?.position || '',
         username: currentUser?.username || '',
-        customAttributes: {} as Record<string, string>,
+        customAttributes: {},
     });
     const [canSave, setCanSave] = useState(false);
     const [error, setError] = useState<unknown>();
@@ -76,7 +78,7 @@ const EditProfile = ({
             color: theme.sidebarHeaderTextColor,
             text: buttonText,
         };
-    }, [isTablet, theme.sidebarHeaderTextColor]);
+    }, [isTablet, theme.sidebarHeaderTextColor, buttonText]);
 
     const leftButton = useMemo(() => {
         return isTablet ? null : {
@@ -93,7 +95,7 @@ const EditProfile = ({
                 leftButtons: [leftButton!],
             });
         }
-    }, []);
+    }, [isTablet, componentId, rightButton, leftButton]);
 
     const close = useCallback(() => {
         if (isModal) {
@@ -103,7 +105,7 @@ const EditProfile = ({
         } else {
             popTopScreen(componentId);
         }
-    }, []);
+    }, [componentId, isModal, isTablet]);
 
     const enableSaveButton = useCallback((value: boolean) => {
         if (!isTablet) {
@@ -116,7 +118,7 @@ const EditProfile = ({
             setButtons(componentId, buttons);
         }
         setCanSave(value);
-    }, [componentId, rightButton]);
+    }, [componentId, rightButton, isTablet]);
 
     useLayoutEffect(() => {
         const fetchCustomAttributes = async () => {
@@ -131,14 +133,18 @@ const EditProfile = ({
                 ]);
 
                 if (fields?.length > 0) {
-                    const attributes: Record<string, string> = {};
+                    const attributes: Record<string, CustomAttribute> = {};
                     fields.forEach((field) => {
-                        attributes[field.id] = attrValues[field.id] || '';
+                        attributes[field.id] = {
+                            id: field.id,
+                            name: field.name,
+                            value: attrValues[field.id] || '',
+                        };
                     });
-                    setUserInfo((prev) => ({...prev, customAttributes: attributes}));
+                    setUserInfo((prev) => ({...prev, customAttributes: attributes} as UserInfo));
                 }
-            } catch {
-                // Ignore errors
+            } catch (e) {
+                logDebug('Error fetching custom Attributes', e);
             }
         };
 
@@ -184,8 +190,14 @@ const EditProfile = ({
 
                 // Update custom attributes if changed
                 if (userInfo.customAttributes) {
+                    logDebug('updating custom profile attributes', userInfo.customAttributes);
+
+                    const values: CustomProfileAttributeSimple = {};
+                    Object.keys(userInfo.customAttributes).forEach((field) => {
+                        values[field] = userInfo.customAttributes[field].value;
+                    });
                     const client = NetworkManager.getClient(serverUrl);
-                    await client.updateCustomProfileAttributes(userInfo.customAttributes);
+                    await client.updateCustomProfileAttributeValues(values);
                 }
             }
 
@@ -204,26 +216,46 @@ const EditProfile = ({
         enableSaveButton(true);
     }, [enableSaveButton]);
 
-    const onUpdateField = useCallback((fieldKey: string, name: string) => {
+    const onUpdateField = useCallback((fieldKey: string, value: string) => {
         const update = {...userInfo};
         if (fieldKey.startsWith('customAttributes.')) {
             const attrKey = fieldKey.split('.')[1];
-            update.customAttributes = {...update.customAttributes, [attrKey]: name};
+            update.customAttributes = {...update.customAttributes, [attrKey]: {id: attrKey, name: userInfo.customAttributes[attrKey].name, value}};
         } else {
-            update[fieldKey] = name;
+            switch (fieldKey) {
+            // typescript doesn't like to do update[fieldkey] as it might containg a customAttribute case
+                case 'email':
+                    update.email = value;
+                    break;
+                case 'firstName':
+                    update.firstName = value;
+                    break;
+                case 'lastName':
+                    update.lastName = value;
+                    break;
+                case 'nickname':
+                    update.nickname = value;
+                    break;
+                case 'position':
+                    update.position = value;
+                    break;
+                case 'username':
+                    update.username = value;
+                    break;
+            }
         }
         setUserInfo(update);
 
         let didChange = false;
         if (fieldKey.startsWith('customAttributes.')) {
             const attrKey = fieldKey.split('.')[1];
-            didChange = userInfo.customAttributes?.[attrKey] !== name;
+            didChange = userInfo.customAttributes?.[attrKey].value !== value;
         } else {
             // @ts-expect-error access object property by string key
             const currentValue = currentUser[fieldKey];
-            didChange = currentValue !== name;
+            didChange = currentValue !== value;
         }
-        
+
         hasUpdateUserInfo.current = didChange;
         enableSaveButton(didChange);
     }, [userInfo, currentUser, enableSaveButton]);
@@ -278,6 +310,7 @@ const EditProfile = ({
                 onUpdateField={onUpdateField}
                 userInfo={userInfo}
                 submitUser={submitUser}
+                enableCustomAttributes={enableCustomAttributes}
             />
         </KeyboardAwareScrollView>
     ) : null;
