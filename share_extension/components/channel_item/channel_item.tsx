@@ -57,7 +57,7 @@ export const getStyleSheet = makeStyleSheetFromTheme((theme: Theme) => ({
 }));
 
 export const textStyle = StyleSheet.create({
-    bold: typography('Body', 200, 'SemiBold'),
+    bold: typography('Body', 200, 'Bold'),
     regular: typography('Body', 200, 'Regular'),
 });
 
