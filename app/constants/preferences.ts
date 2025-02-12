@@ -173,7 +173,7 @@ const Preferences = {
         onyx: {
             type: 'Onyx',
             sidebarBg: '#202228',
-            sidebarText: '#ffffff',
+            sidebarText: '#919191',
             sidebarUnreadText: '#ffffff',
             sidebarTextHoverBg: '#25262a',
             sidebarTextActiveBorder: '#4a7ce8',
