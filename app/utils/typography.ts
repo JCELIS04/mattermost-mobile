@@ -5,7 +5,7 @@ import {StyleSheet, type TextStyle} from 'react-native';
 
 // type FontFamilies = 'OpenSans' | 'Metropolis';
 export type FontTypes = 'Heading' | 'Body';
-export type FontStyles = 'SemiBold' | 'Regular' | 'Light';
+export type FontStyles = 'SemiBold' | 'Regular' | 'Light' | 'Bold'; // 'Bold' agregado aquí
 export type FontSizes = 25 | 50 | 75 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 1000 | 1200;
 
 const fontFamily = StyleSheet.create({
@@ -26,6 +26,9 @@ const fontStyle = StyleSheet.create({
     },
     Light: {
         fontWeight: '300',
+    },
+    Bold: { // Nuevo estilo Bold
+        fontWeight: '700',
     },
 });
 
@@ -125,6 +128,9 @@ export const typography = (
             typeStyle.fontFamily = `${typeStyle.fontFamily}`;
             break;
         case '600':
+            typeStyle.fontFamily = `${typeStyle.fontFamily}-${style}`;
+            break;
+        case '700': // Nuevo caso para Bold
             typeStyle.fontFamily = `${typeStyle.fontFamily}-${style}`;
             break;
     }
