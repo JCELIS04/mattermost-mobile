@@ -1,4 +1,4 @@
-package com.mattermost.rnbeta
+package com.movivendor.mattermost
 
 
 import android.annotation.SuppressLint
