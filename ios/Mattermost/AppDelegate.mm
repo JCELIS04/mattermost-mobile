@@ -10,6 +10,8 @@
 
 #import "Mattermost-Swift.h"
 #import <os/log.h>
+#import <Firebase.h>
+
 
 @implementation AppDelegate
 
@@ -28,6 +30,7 @@ NSString* const NOTIFICATION_TEST_ACTION = @"test";
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+  [FIRApp configure];
   OrientationManager.shared.delegate = self;
   
   // Clear keychain on first run in case of reinstallation
