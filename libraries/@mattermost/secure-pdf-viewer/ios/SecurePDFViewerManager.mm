@@ -8,16 +8,6 @@
 #import <secure_pdf_viewer/secure_pdf_viewer-Swift.h>
 #endif
 
-#if RCT_NEW_ARCH_ENABLED
-#import <React/RCTConversions.h>
-#import <react/renderer/components/RNSecurePdfViewerSpec/ComponentDescriptors.h>
-#import <react/renderer/components/RNSecurePdfViewerSpec/EventEmitters.h>
-#import <react/renderer/components/RNSecurePdfViewerSpec/Props.h>
-#import <react/renderer/components/RNSecurePdfViewerSpec/RCTComponentViewHelpers.h>
-#import <React/RCTComponentViewFactory.h>
-#endif
-
-
 @implementation SecurePDFViewerManager
 
 RCT_EXPORT_MODULE(SecurePdfViewer)
@@ -44,15 +34,3 @@ RCT_EXPORT_VIEW_PROPERTY(onTap, RCTBubblingEventBlock)
 }
 
 @end
-
-#if RCT_NEW_ARCH_ENABLED
-
-Class<RCTComponentViewProtocol> SecurePdfViewerCls(void) {
-  return SecurePdfViewerComponentView.class;
-}
-
-__attribute__((constructor)) static void registerSecurePdfViewer() {
-  RCTRegisterComponentViewClass(SecurePdfViewerCls);
-}
-
-#endif

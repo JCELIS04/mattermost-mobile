@@ -12,6 +12,8 @@ require File.join(File.dirname(`node --print "require.resolve('expo/package.json
 node_require('react-native/scripts/react_native_pods.rb')
 node_require('react-native-permissions/scripts/setup.rb')
 
+ENV['RCT_NEW_ARCH_ENABLED'] = '0'
+
 platform :ios, '15.1' #min_ios_version_supported
 prepare_react_native_project!
 
@@ -83,6 +85,21 @@ target 'Mattermost' do
     end
     # ======= FIN DE MODIFICACIÓN RCT-FOLLY =======
 
+    private_headers = ['$(PODS_ROOT)/Headers/Private/Yoga', '$(PODS_ROOT)/Headers/Private/React-Core']
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        current = config.build_settings['HEADER_SEARCH_PATHS']
+        current = '$(inherited)' unless current && !current.empty?
+
+        updated = current.dup
+        private_headers.each do |path|
+          updated << " #{path}" unless updated.include?(path)
+        end
+
+        config.build_settings['HEADER_SEARCH_PATHS'] = updated
+      end
+    end
+
     # (Opcional) Configuración de versión mínima iOS
     # installer.pods_project.targets.each do |target|
     #   target.build_configurations.each do |config|
@@ -100,4 +117,3 @@ end
 target 'MattermostShare' do
   pod 'Sentry/HybridSDK', '8.48.0'
 end
-

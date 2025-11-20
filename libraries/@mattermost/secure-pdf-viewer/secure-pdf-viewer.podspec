@@ -14,9 +14,10 @@ Pod::Spec.new do |s|
   s.source       = { :git => ".git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm,swift}"
+  s.exclude_files = ["ios/RCTSecurePDFViewerComponentView.mm"]
 
   fabric_enabled = ENV["RCT_NEW_ARCH_ENABLED"] == "1"
-  other_cpp_flags = fabric_enabled ? "-DRCT_NEW_ARCH_ENABLED=1" : ""
+  other_cpp_flags = ""
 
   install_modules_dependencies(s)
 

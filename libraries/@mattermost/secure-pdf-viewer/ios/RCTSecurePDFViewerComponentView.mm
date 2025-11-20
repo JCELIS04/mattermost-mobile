@@ -5,19 +5,23 @@
 #import <React/RCTFabricComponentsPlugins.h>
 
 #import "SecurePDFViewerManager.h"
-#import "react/renderer/components/RNSSecurePdfViewerSpec/ComponentDescriptors.h"
-#import "react/renderer/components/RNSSecurePdfViewerSpec/EventEmitters.h"
-#import "react/renderer/components/RNSSecurePdfViewerSpec/Props.h"
-#import "react/renderer/components/RNSSecurePdfViewerSpec/RCTComponentViewHelpers.h"
+#import "react/renderer/components/SecurePdfViewer/ComponentDescriptors.h"
+#import "react/renderer/components/SecurePdfViewer/EventEmitters.h"
+#import "react/renderer/components/SecurePdfViewer/Props.h"
+#import "react/renderer/components/SecurePdfViewer/RCTComponentViewHelpers.h"
 
+#if __has_include("SecurePdfViewer-Swift.h")
 #import "SecurePdfViewer-Swift.h"
+#else
+#import "secure_pdf_viewer-Swift.h"
+#endif
 
 using namespace facebook::react;
 
-@interface SecurePdfViewerComponentView () <RCTSecurePdfViewerViewProtocol>
+@interface SecurePdfViewerComponentViewObjC : RCTViewComponentView
 @end
 
-@implementation SecurePdfViewerComponentView {
+@implementation SecurePdfViewerComponentViewObjC {
   SharedSecurePdfViewerProps _props;
   SharedSecurePdfViewerEventEmitter _eventEmitter;
 }
@@ -83,7 +87,7 @@ using namespace facebook::react;
 @end
 
 Class<RCTComponentViewProtocol> SecurePdfViewerCls(void) {
-  return SecurePdfViewerComponentView.class;
+  return SecurePdfViewerComponentViewObjC.class;
 }
 
 __attribute__((constructor)) static void RegisterSecurePdfViewerComponentView() {
