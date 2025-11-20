@@ -20,11 +20,13 @@ import AttachmentText from './attachment_text';
 import AttachmentThumbnail from './attachment_thumbnail';
 import AttachmentTitle from './attachment_title';
 
+import type {AvailableScreens} from '@typings/screens/navigation';
+
 type Props = {
     attachment: MessageAttachment;
     channelId: string;
     layoutWidth?: number;
-    location: string;
+    location: AvailableScreens;
     metadata?: PostMetadata | null;
     postId: string;
     theme: Theme;
@@ -98,8 +100,8 @@ export default function MessageAttachment({attachment, channelId, layoutWidth, l
                     value={attachment.title}
                 />
                 }
-                {isValidUrl(attachment.thumb_url) &&
-                <AttachmentThumbnail uri={attachment.thumb_url}/>
+                {Boolean(attachment.thumb_url) && isValidUrl(attachment.thumb_url) &&
+                <AttachmentThumbnail uri={attachment.thumb_url!}/>
                 }
                 {Boolean(attachment.text) &&
                 <AttachmentText
@@ -120,7 +122,7 @@ export default function MessageAttachment({attachment, channelId, layoutWidth, l
                     blockStyles={blockStyles}
                     channelId={channelId}
                     location={location}
-                    fields={attachment.fields}
+                    fields={attachment.fields!}
                     metadata={metadata}
                     textStyles={textStyles}
                     theme={theme}
@@ -129,18 +131,19 @@ export default function MessageAttachment({attachment, channelId, layoutWidth, l
                 {Boolean(attachment.footer) &&
                 <AttachmentFooter
                     icon={attachment.footer_icon}
-                    text={attachment.footer}
+                    text={attachment.footer!}
                     theme={theme}
                 />
                 }
-                {Boolean(attachment.actions?.length) &&
+                {Boolean(attachment.actions && attachment.actions.length) &&
                 <AttachmentActions
                     actions={attachment.actions!}
                     postId={postId}
                     theme={theme}
+                    location={location}
                 />
                 }
-                {Boolean(metadata?.images?.[attachment.image_url]) &&
+                {attachment.image_url && Boolean(metadata?.images?.[attachment.image_url]) &&
                     <AttachmentImage
                         imageUrl={attachment.image_url}
                         imageMetadata={metadata!.images![attachment.image_url]!}

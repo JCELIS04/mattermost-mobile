@@ -5,17 +5,26 @@ import React, {useCallback, useMemo, useState} from 'react';
 import {ScrollView, View, type StyleProp, type ViewStyle} from 'react-native';
 
 import AutocompleteSelector from '@components/autocomplete_selector';
-import {Preferences} from '@constants';
+import {Preferences, Screens} from '@constants';
 import {CustomThemeProvider} from '@context/theme';
 import useAndroidHardwareBackHandler from '@hooks/android_back_handler';
+import SecurityManager from '@managers/security_manager';
 import {popTopScreen} from '@screens/navigation';
 
 import ButtonComponentLibrary from './button.cl';
+import ChipComponentLibrary from './chip.cl';
+import OptionItemComponentLibrary from './option_item.cl';
+import SectionNoticeComponentLibrary from './section_notice.cl';
+import TagComponentLibrary from './tag.cl';
 
 import type {AvailableScreens} from '@typings/screens/navigation';
 
 const componentMap = {
     Button: ButtonComponentLibrary,
+    Chip: ChipComponentLibrary,
+    OptionItem: OptionItemComponentLibrary,
+    Tag: TagComponentLibrary,
+    SectionNotice: SectionNoticeComponentLibrary,
 };
 
 type ComponentName = keyof typeof componentMap
@@ -111,13 +120,17 @@ const ComponentLibrary = ({componentId}: Props) => {
 
     const SelectedComponent = componentMap[selectedComponent];
     return (
-        <ScrollView style={{margin: 10}}>
+        <ScrollView
+            style={{margin: 10}}
+            nativeID={SecurityManager.getShieldScreenId(componentId)}
+        >
             <AutocompleteSelector
                 testID='selectedComponent'
                 label='Component'
                 onSelected={onSelectComponent}
                 selected={selectedComponent}
                 options={componentOptions}
+                location={Screens.COMPONENT_LIBRARY}
             />
             <AutocompleteSelector
                 testID='selectedTheme'
@@ -125,6 +138,7 @@ const ComponentLibrary = ({componentId}: Props) => {
                 onSelected={onSelectTheme}
                 selected={selectedTheme}
                 options={themeOptions}
+                location={Screens.COMPONENT_LIBRARY}
             />
             <AutocompleteSelector
                 testID='selectedBackground'
@@ -132,6 +146,7 @@ const ComponentLibrary = ({componentId}: Props) => {
                 onSelected={onSelectBackground}
                 selected={selectedBackground}
                 options={backgroundOptions}
+                location={Screens.COMPONENT_LIBRARY}
             />
             <View style={backgroundStyle}>
                 <CustomThemeProvider theme={Preferences.THEMES[selectedTheme]}>

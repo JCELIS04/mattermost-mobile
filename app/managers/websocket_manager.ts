@@ -23,7 +23,7 @@ import {logError} from '@utils/log';
 const WAIT_TO_CLOSE = toMilliseconds({seconds: 15});
 const WAIT_UNTIL_NEXT = toMilliseconds({seconds: 5});
 
-class WebsocketManager {
+class WebsocketManagerSingleton {
     private connectedSubjects: {[serverUrl: string]: BehaviorSubject<WebsocketConnectedState>} = {};
 
     private clients: Record<string, WebSocketClient> = {};
@@ -48,10 +48,10 @@ class WebsocketManager {
         this.netConnected = Boolean(netInfo.isConnected);
         this.netType = netInfo.type;
         serverCredentials.forEach(
-            ({serverUrl, token}) => {
+            ({serverUrl, token, preauthSecret}) => {
                 try {
                     DatabaseManager.getServerDatabaseAndOperator(serverUrl);
-                    this.createClient(serverUrl, token);
+                    this.createClient(serverUrl, token, preauthSecret);
                 } catch (error) {
                     logError('WebsocketManager init error', error);
                 }
@@ -80,12 +80,12 @@ class WebsocketManager {
         this.getConnectedSubject(serverUrl).next('not_connected');
     };
 
-    public createClient = (serverUrl: string, bearerToken: string) => {
+    public createClient = (serverUrl: string, bearerToken: string, preauthSecret?: string) => {
         if (this.clients[serverUrl]) {
             this.invalidateClient(serverUrl);
         }
 
-        const client = new WebSocketClient(serverUrl, bearerToken);
+        const client = new WebSocketClient(serverUrl, bearerToken, preauthSecret);
 
         client.setFirstConnectCallback(() => this.onFirstConnect(serverUrl));
         client.setEventCallback((evt: WebSocketMessage) => handleWebSocketEvent(serverUrl, evt));
@@ -178,6 +178,7 @@ class WebsocketManager {
     private onReconnect = async (serverUrl: string) => {
         this.startPeriodicStatusUpdates(serverUrl);
         this.getConnectedSubject(serverUrl).next('connected');
+
         const error = await handleReconnect(serverUrl);
         if (error) {
             this.getClient(serverUrl)?.close(false);
@@ -292,4 +293,5 @@ class WebsocketManager {
     };
 }
 
-export default new WebsocketManager();
+const WebsocketManager = new WebsocketManagerSingleton();
+export default WebsocketManager;

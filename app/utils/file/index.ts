@@ -71,6 +71,11 @@ const SUPPORTED_VIDEO_FORMAT = Platform.select({
     android: ['video/3gpp', 'video/x-matroska', 'video/mp4', 'video/webm', 'video/quicktime'],
 });
 
+const SUPPORTED_AUDIO_FORMAT = Platform.select({
+    ios: ['audio/mp4', 'audio/mpeg', 'audio/wav', 'audio/x-aiff'],
+    android: ['audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/webm', 'audio/3gpp'],
+});
+
 const types: Record<string, string> = {};
 const extensions: Record<string, readonly string[]> = {};
 
@@ -293,6 +298,21 @@ export const isDocument = (file?: FileInfo | FileModel) => {
     return SUPPORTED_DOCS_FORMAT!.includes(mime);
 };
 
+export const isPdf = (file?: FileInfo | FileModel) => {
+    if (!file) {
+        return false;
+    }
+
+    let mime = 'mime_type' in file ? file.mime_type : file.mimeType;
+    if (mime && mime.includes(';')) {
+        mime = mime.split(';')[0];
+    } else if (!mime && file?.name) {
+        mime = lookupMimeType(file.name);
+    }
+
+    return mime === 'application/pdf';
+};
+
 export const isVideo = (file?: FileInfo | FileModel) => {
     if (!file) {
         return false;
@@ -306,6 +326,21 @@ export const isVideo = (file?: FileInfo | FileModel) => {
     }
 
     return SUPPORTED_VIDEO_FORMAT!.includes(mime);
+};
+
+export const isAudio = (file?: FileInfo | FileModel) => {
+    if (!file) {
+        return false;
+    }
+
+    let mime = 'mime_type' in file ? file.mime_type : file.mimeType;
+    if (mime && mime.includes(';')) {
+        mime = mime.split(';')[0];
+    } else if (!mime && file?.name) {
+        mime = lookupMimeType(file.name);
+    }
+
+    return SUPPORTED_AUDIO_FORMAT!.includes(mime);
 };
 
 export function getFormattedFileSize(bytes: number): string {
@@ -552,4 +587,29 @@ export const getAllFilesInCachesDirectory = async (serverUrl: string) => {
     } catch (error) {
         return {error};
     }
+};
+
+export const pathWithPrefix = (prefix: string, path: string) => {
+    const p = path.startsWith(prefix) ? '' : prefix;
+    return `${p}${path}`;
+};
+
+export const deleteFile = async (path: string) => {
+    await deleteAsync(pathWithPrefix('file://', path));
+};
+
+export const filesLocalPathValidation = async (files: FileModel[], authorId: string) => {
+    const filesInfo: FileInfo[] = [];
+    for await (const f of files) {
+        const info = f.toFileInfo(authorId);
+        if (info.localPath) {
+            const exists = await fileExists(info.localPath);
+            if (!exists) {
+                info.localPath = '';
+            }
+        }
+        filesInfo.push(info);
+    }
+
+    return filesInfo;
 };

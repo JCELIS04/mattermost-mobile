@@ -3,6 +3,7 @@
 
 import ClientCalls, {type ClientCallsMix} from '@calls/client/rest';
 import ClientPlugins, {type ClientPluginsMix} from '@client/rest/plugins';
+import ClientPlaybooks, {type ClientPlaybooksMix} from '@playbooks/client/rest';
 import mix from '@utils/mix';
 
 import ClientApps, {type ClientAppsMix} from './apps';
@@ -20,6 +21,7 @@ import ClientIntegrations, {type ClientIntegrationsMix} from './integrations';
 import ClientNPS, {type ClientNPSMix} from './nps';
 import ClientPosts, {type ClientPostsMix} from './posts';
 import ClientPreferences, {type ClientPreferencesMix} from './preferences';
+import ClientScheduledPost, {type ClientScheduledPostMix} from './scheduled_post';
 import ClientTeams, {type ClientTeamsMix} from './teams';
 import ClientThreads, {type ClientThreadsMix} from './threads';
 import ClientTos, {type ClientTosMix} from './tos';
@@ -39,6 +41,7 @@ interface Client extends ClientBase,
     ClientIntegrationsMix,
     ClientPostsMix,
     ClientPreferencesMix,
+    ClientScheduledPostMix,
     ClientTeamsMix,
     ClientThreadsMix,
     ClientTosMix,
@@ -46,8 +49,12 @@ interface Client extends ClientBase,
     ClientCallsMix,
     ClientPluginsMix,
     ClientNPSMix,
-    ClientCustomAttributesMix
-{}
+    ClientCustomAttributesMix,
+    ClientPlaybooksMix
+{
+    setClientCredentials: (token: string, preauthSecret?: string) => void;
+    setCSRFToken: (csrfToken: string) => void;
+}
 
 class Client extends mix(ClientBase).with(
     ClientApps,
@@ -61,6 +68,7 @@ class Client extends mix(ClientBase).with(
     ClientIntegrations,
     ClientPosts,
     ClientPreferences,
+    ClientScheduledPost,
     ClientTeams,
     ClientThreads,
     ClientTos,
@@ -69,10 +77,12 @@ class Client extends mix(ClientBase).with(
     ClientPlugins,
     ClientNPS,
     ClientCustomAttributes,
+    ClientScheduledPost,
+    ClientPlaybooks,
 ) {
     // eslint-disable-next-line no-useless-constructor
-    constructor(apiClient: APIClientInterface, serverUrl: string, bearerToken?: string, csrfToken?: string) {
-        super(apiClient, serverUrl, bearerToken, csrfToken);
+    constructor(apiClient: APIClientInterface, serverUrl: string, bearerToken?: string, csrfToken?: string, preauthSecret?: string) {
+        super(apiClient, serverUrl, bearerToken, csrfToken, preauthSecret);
     }
 }
 

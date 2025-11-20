@@ -18,6 +18,7 @@ import ShowMoreButton from './show_more_button';
 import type PostModel from '@typings/database/models/servers/post';
 import type UserModel from '@typings/database/models/servers/user';
 import type {HighlightWithoutNotificationKey, SearchPattern, UserMentionKey} from '@typings/global/markdown';
+import type {AvailableScreens} from '@typings/screens/navigation';
 
 type MessageProps = {
     currentUser?: UserModel;
@@ -27,7 +28,7 @@ type MessageProps = {
     isPendingOrFailed: boolean;
     isReplyPost: boolean;
     layoutWidth?: number;
-    location: string;
+    location: AvailableScreens;
     post: PostModel;
     searchPatterns?: SearchPattern[];
     theme: Theme;
@@ -67,7 +68,12 @@ const Message = ({currentUser, isHighlightWithoutNotificationLicensed, highlight
     const blockStyles = getMarkdownBlockStyles(theme);
     const textStyles = getMarkdownTextStyles(theme);
 
-    const onLayout = useCallback((event: LayoutChangeEvent) => setHeight(event.nativeEvent.layout.height), []);
+    const onLayout = useCallback((event: LayoutChangeEvent) => {
+        const h = event.nativeEvent.layout.height;
+        if (h > maxHeight) {
+            setHeight(event.nativeEvent.layout.height);
+        }
+    }, [maxHeight]);
     const onPress = () => setOpen(!open);
 
     const channelMentions = useMemo(() => {
