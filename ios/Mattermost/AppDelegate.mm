@@ -10,6 +10,8 @@
 
 #import "Mattermost-Swift.h"
 #import <os/log.h>
+#import <Firebase.h>
+
 
 @implementation AppDelegate
 
@@ -28,6 +30,7 @@ NSString* const NOTIFICATION_TEST_ACTION = @"test";
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+  [FIRApp configure];
   OrientationManager.shared.delegate = self;
   
   // Clear keychain on first run in case of reinstallation
@@ -58,9 +61,33 @@ NSString* const NOTIFICATION_TEST_ACTION = @"test";
   return NO;
 }
 
-- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
-{
-  [RNNotifications didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+    // 1. Convertir el token a NSString
+    const unsigned char *dataBuffer = (const unsigned char *)deviceToken.bytes;
+    NSMutableString *tokenString = [NSMutableString stringWithCapacity:(deviceToken.length * 2)];
+    
+    for (NSUInteger i = 0; i < deviceToken.length; i++) {
+        [tokenString appendFormat:@"%02x", dataBuffer[i]];
+    }
+    
+    // 2. Logs detallados
+    NSLog(@"🔵 [DEBUG] APNs Token Raw (NSData): %@", deviceToken);
+    NSLog(@"🔵 [DEBUG] APNs Token Hex: %@", tokenString);
+    NSLog(@"🔵 [DEBUG] APNs Token Length: %lu bytes (expected 32 bytes)", (unsigned long)deviceToken.length);
+    
+    // 3. Bundle ID de la app
+    NSString *bundleID = [[NSBundle mainBundle] bundleIdentifier];
+    NSLog(@"🔵 [DEBUG] App Bundle ID: %@", bundleID);
+    
+    // 4. Entorno (producción/desarrollo)
+    #if DEBUG
+        NSLog(@"🔵 [DEBUG] Environment: Sandbox (Development)");
+    #else
+        NSLog(@"🔵 [DEBUG] Environment: Production");
+    #endif
+    
+    // 5. Enviar token a RNNotifications
+    [RNNotifications didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
 }
 
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {

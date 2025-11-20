@@ -30,7 +30,12 @@ setup_permissions([
 
 target 'Mattermost' do
   # Pods for Mattermost
+  pod 'Firebase/Core', :modular_headers => true
+  pod 'FirebaseCore', :modular_headers => true  # Add this line
+  pod 'Firebase/Messaging', :modular_headers => true
+  pod 'GoogleUtilities', :modular_headers => true
 
+	
   use_expo_modules!
   config = use_native_modules!
 
@@ -40,18 +45,43 @@ target 'Mattermost' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  pod 'React-jsi', :path => '../node_modules/react-native/ReactCommon/jsi', :modular_headers => true
-  pod 'React-jsc', :path => '../node_modules/react-native/ReactCommon/jsc', :modular_headers => true
   pod 'simdjson', path: '../node_modules/@nozbe/simdjson', :modular_headers => true
 
   post_install do |installer|
-    # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
+    # Configuración base de React Native
     react_native_post_install(
       installer,
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
-  
+
+    # ======= INICIO DE MODIFICACIÓN RCT-FOLLY =======
+    Dir.glob(File.join(installer.sandbox.root, "RCT-Folly/folly/Portability.h")) do |file|
+      begin
+        # Hacer el archivo escribible
+        system "chmod +w '#{file}'"
+        
+        # Leer y modificar contenido
+        contents = File.read(file)
+        modified_contents = contents.gsub(/#define FOLLY_HAS_COROUTINES 1/, '#define FOLLY_HAS_COROUTINES 0')
+        
+        # Usar sudo si no tiene permisos de escritura
+        if !File.writable?(file)
+          system "sudo chmod +w '#{file}'"
+        end
+        
+        # Escribir cambios
+        File.write(file, modified_contents)
+        
+        # Restaurar permisos originales
+        system "chmod -w '#{file}'"
+      rescue => e
+        Pod::UI.warn "🚨 Error modificando Portability.h: #{e.message}"
+      end
+    end
+    # ======= FIN DE MODIFICACIÓN RCT-FOLLY =======
+
+    # (Opcional) Configuración de versión mínima iOS
     # installer.pods_project.targets.each do |target|
     #   target.build_configurations.each do |config|
     #     config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'

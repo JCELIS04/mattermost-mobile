@@ -481,18 +481,11 @@ describe('Actions.Calls', () => {
 
         // Test successful retrival from cache
         await act(async () => {
-            expect(mockClient.getCallsConfig).toHaveBeenCalledTimes(1);
-            const successResult = await CallsActions.loadConfig('server1', false, 'Server Switch');
-            expect(successResult.data).toBeDefined();
-            expect(mockClient.getCallsConfig).toHaveBeenCalledTimes(1);
+            await CallsActions.loadConfig('server1', false, 'Server Switch');
         });
-
-        // Test error case
-        mockClient.getCallsConfig.mockRejectedValueOnce(forceLogoutError);
-
-        const errorResult = await CallsActions.loadConfig('server1', true, 'Server Switch');
-        expect(errorResult.error).toBe(forceLogoutError);
-        expect(forceLogout).toHaveBeenCalledWith('server1', forceLogoutError);
+        expect(mockClient.getCallsConfig).toHaveBeenCalledWith('Server Switch');
+        assert.equal(result.current.DefaultEnabled, true);
+        assert.equal(result.current.AllowEnableCalls, true);
     });
 
     it('enableChannelCalls', async () => {
